@@ -1,0 +1,200 @@
+#
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: TerraformBlueprint
+metadata:
+  name: terraform-google-container-agent-engine
+  source:
+    type: git
+    git:
+      repo: https://github.com/GoogleCloudPlatform/terraform-google-container-agent-engine.git
+      # A subdirectory in the repo containing the blueprint.
+      # directory: /
+  version: 1.0.0
+  actuationTool:
+    type: Terraform
+    versions:
+      - ">= 1.3"
+  title: Container-based Agent Engine
+  description:
+    tagline: A generic, container-based agent engine on Google Cloud Platform using Cloud Run.
+    detailed: |-
+      This Terraform module provisions a generic, container-based agent engine on Google Cloud Platform.
+      It uses Cloud Run as the core serverless compute and provides flexible options for invocation,
+      state management, and networking. The module can be configured to create agents for various
+      use cases, including:
+      - Event-driven processing (e.g., triggered by Cloud Storage events via Eventarc).
+      - Scheduled tasks (e.g., cron jobs via Cloud Scheduler).
+      - Publicly accessible web services or APIs.
+      - Stateful services connected to a private Memorystore (Redis) instance.
+spec:
+  # This section defines the inputs and outputs of the blueprint.
+  # This metadata is used to generate a customized UI for the blueprint.
+  terraform:
+    # A list of variables that can be customized by the user.
+    variables:
+      - name: name
+        description: A unique name for the agent engine. This will be used as a prefix for all created resources.
+        type: string
+        default: "agent-engine"
+        required: false
+      - name: project_id
+        description: The ID of the Google Cloud project where the resources will be created. If not provided, the provider project is used.
+        type: string
+        default: null
+        required: false
+      - name: location
+        description: The Google Cloud region where the resources will be created (e.g., 'us-central1').
+        type: string
+        default: "us-central1"
+        required: false
+      - name: container_image
+        description: The URI of the container image to be deployed for the agent (e.g., 'gcr.io/my-project/my-agent:latest').
+        type: string
+        default: "us-docker.pkg.dev/cloudrun/container/hello"
+        required: false
+      - name: container_port
+        description: The port number that the container listens on.
+        type: number
+        default: 8080
+        required: false
+      - name: container_env_vars
+        description: A map of environment variables to be passed to the container.
+        type: map(string)
+        default: {}
+        required: false
+      - name: scaling
+        description: Configuration for the Cloud Run service's autoscaling settings.
+        type: object
+        default:
+          min_instance_count: 0
+          max_instance_count: 10
+        required: false
+      - name: service_account_create
+        description: A boolean flag to control the creation of a new service account for the agent. If false, 'service_account_email' must be provided.
+        type: boolean
+        default: true
+        required: false
+      - name: service_account_email
+        description: The email of an existing service account to use for the agent. Required if 'service_account_create' is false.
+        type: string
+        default: null
+        required: false
+      - name: service_account_roles
+        description: A list of project-level IAM roles to grant to the agent's service account (e.g., ['roles/storage.objectViewer']). Warning: Granting project-level roles can have broad security implications. Prefer more granular, resource-specific roles where possible.
+        type: list(string)
+        default: []
+        required: false
+      - name: enable_redis
+        description: If set to true, a Memorystore (Redis) instance will be created and connected to the agent via a Serverless VPC Access Connector.
+        type: boolean
+        default: false
+        required: false
+      - name: network_config
+        description: Network configuration. Required if 'enable_redis' is true. 'network_name' is the name of the VPC network, not the full resource ID.
+        type: object
+        default: null
+        required: false
+      - name: redis_config
+        description: Configuration for the Memorystore (Redis) instance. Only used if 'enable_redis' is true.
+        type: object
+        default:
+          tier: "BASIC"
+          memory_size_gb: 1
+        required: false
+      - name: allow_unauthenticated
+        description: If set to true, the Cloud Run service will be publicly accessible to all users.
+        type: boolean
+        default: false
+        required: false
+      - name: eventarc_trigger_gcs
+        description: If configured, creates an Eventarc trigger that invokes the agent when a new object is created in the specified GCS bucket. Provide an object with a 'bucket' attribute.
+        type: object
+        default: null
+        required: false
+      - name: scheduler_job
+        description: If configured, creates a Cloud Scheduler job to invoke the agent on a specified schedule. The job will securely call the agent using an OIDC token.
+        type: object
+        default: null
+        required: false
+    # Groups of related variables.
+    variableGroups:
+      - name: General Settings
+        description: Basic configuration for the agent engine.
+        variables:
+          - name
+          - project_id
+          - location
+      - name: Container Configuration
+        description: Settings for the container image and its runtime environment.
+        variables:
+          - container_image
+          - container_port
+          - container_env_vars
+          - scaling
+      - name: Identity & Access
+        description: Configuration for the service account and its permissions.
+        variables:
+          - service_account_create
+          - service_account_email
+          - service_account_roles
+      - name: Networking & State (Redis)
+        description: Optional settings for enabling stateful operations with Redis and private networking.
+        variables:
+          - enable_redis
+          - network_config
+          - redis_config
+      - name: Invocation & Triggers
+        description: Configure how the agent engine is triggered or invoked.
+        variables:
+          - allow_unauthenticated
+          - eventarc_trigger_gcs
+          - scheduler_job
+    # A list of outputs produced by the blueprint.
+    outputs:
+      - name: cloud_run_service_id
+        description: The fully qualified ID of the created Cloud Run service.
+      - name: cloud_run_service_uri
+        description: The publicly invokable URI of the Cloud Run service.
+      - name: service_account_email
+        description: The email of the service account used by the Agent Engine.
+      - name: redis_instance_id
+        description: The ID of the Memorystore Redis instance. This output is only available if 'enable_redis' is true.
+      - name: redis_instance_host
+        description: The IP address or hostname of the Redis instance. This output is only available if 'enable_redis' is true.
+  # This section defines the requirements for the blueprint to be deployed.
+  requirements:
+    # A list of GCP APIs that must be enabled.
+    services:
+      - cloudresourcemanager.googleapis.com
+      - iam.googleapis.com
+      - run.googleapis.com
+      - vpcaccess.googleapis.com
+      - redis.googleapis.com
+      - eventarc.googleapis.com
+      - cloudscheduler.googleapis.com
+    # A list of roles/permissions required to deploy the blueprint.
+    roles:
+      - level: project
+        roles:
+          - roles/iam.serviceAccountAdmin
+          - roles/resourcemanager.projectIamAdmin
+          - roles/run.admin
+          - roles/vpcaccess.admin
+          - roles/redis.admin
+          - roles/eventarc.admin
+          - roles/cloudscheduler.admin
+          - roles/iam.serviceAccountUser
