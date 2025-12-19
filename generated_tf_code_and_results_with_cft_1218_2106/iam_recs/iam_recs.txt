@@ -1,0 +1,22 @@
+ERR: adc tool failed: exit status 1
+stderr:
+INFO: Streaming build results to: http://sponge2/6ee1913f-7df3-4165-aa8f-b38aec7bd420
+INFO: See http://go/buildz/dbip-d8b728b9-0931-4444-9cfc-57670d4fa87f for more information about your request.
+Computing main repo mapping: 
+Loading: 
+Loading: 0 packages loaded
+Analyzing: target //cloud/security/iam/policy_ai/cli:adc (0 packages loaded, 0 targets configured)
+Analyzing: target //cloud/security/iam/policy_ai/cli:adc (0 packages loaded, 0 targets configured)
+
+INFO: Analyzed target //cloud/security/iam/policy_ai/cli:adc (0 packages loaded, 0 targets configured).
+INFO: Found 1 target...
+Target //cloud/security/iam/policy_ai/cli:adc up-to-date:
+  blaze-bin/cloud/security/iam/policy_ai/cli/adc
+INFO: Elapsed time: 0.400s, Forge stats: 0/2 actions cached, 0.0s CPU used, 0.0s queue time, 0.0 MB ObjFS output (novel bytes: 0.0 MB), 0.0 MB local output, Critical Path: 0.06s, Remote (72.41%!o(MISSING)f the time): [queue: 0.00%!,(MISSING) setup: 43.10%!,(MISSING) process: 1.72%!,(MISSING) other: 12.07%!](MISSING)
+INFO: Build completed successfully, 3 total actions
+INFO: 
+INFO: Running command line: blaze-bin/cloud/security/iam/policy_ai/cli/adc
+INFO: Streaming build results to: http://sponge2/6ee1913f-7df3-4165-aa8f-b38aec7bd420
+F1219 05:21:37.147302       1 noerr.go:15] generic::internal: GenerateIacRoleRecommendation failed: generic::internal: generic::internal: no recommendations in response: Gemini role picker wasn't able to recommend roles. Try another request. Consider explicitly mentioning the services (i.e. BigQuery) and operations (i.e. get, update, create, list).
+output:{messages:{content:"{\n  \"predefined_roles_recommendation\": {\n    \"recommended_roles\": [],\n    \"recommended_reason\": \"Gemini role picker wasn't able to recommend roles. Try another request. Consider explicitly mentioning the services (i.e. BigQuery) and operations (i.e. get, update, create, list).\"\n  }\n}"}}  output_data_context:{additional_context:{[type.googleapis.com/google.cloud.cloudaicompanion.v1main.PickRolesOutputContext]:{intro:"Gemini role picker wasn't able to recommend roles. Try another request. Consider explicitly mentioning the services (i.e. BigQuery) and operations (i.e. get, update, create, list)."}}}
+

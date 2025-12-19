@@ -1,0 +1,3 @@
+TF validate result: Result: VALID
+TF plan result: Result: PLAN_SUCCESSFUL
+TFQS score result: Scoring skipped: no golden config URL for component.
